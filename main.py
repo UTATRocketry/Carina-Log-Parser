@@ -2,73 +2,126 @@ import csv
 import os
 
 SELECT_RANGE = True # Set to False if running for first time on new data
-LOWER, UPPER = 6190, 6220 # Set the range
-FOLDER = "CO-O1\\" # Specify the folder
-SELECT_NAME = "3. Further_Selected\\" # Change to '3. Further_Selected_Data' for different scales
+LOWER, UPPER = 6260, 6290 # Set the range
+TEST_DIR = "CO-O1\\" # Specify the folder
+DATA_NAME = "data.log" # Specify the data file
+EVENT_NAME = "events.log" # Specify the event file
+DATA_DIR_NAME = "0. Raw\\" # Specify the data directory
+PARSED_DIR_NAME = "1. Parsed\\" # Specify the parsed data directory
+SELECT_DIR_NAME = "3. Further Selected\\" # Specify the selected data directory
 
-def get_seconds_hhmmss(time_formatted):
-    time_formatted = time_formatted.split(":")
-    time_formatted = [int(t) for t in time_formatted]
-    return time_formatted[0]*3600 + time_formatted[1]*60 + time_formatted[2]
-  
+SENSOR_NAME = "Sensors\\"
+ACTUATOR_NAME = "Actuators\\"
 
-def split_space_comma(line):
-    delim_1 = line.split(",")
-    delim_2 = []
-    for d in delim_1:
-        delim_2.extend(d.split(" "))
-    return delim_2
+
+from utils import parse_tools
+
+
+def create_dirs():
+    if not os.path.exists(TEST_DIR + PARSED_DIR_NAME):
+        os.mkdir(TEST_DIR + PARSED_DIR_NAME)
+        os.mkdir(TEST_DIR + PARSED_DIR_NAME + SENSOR_NAME)
+        os.mkdir(TEST_DIR + PARSED_DIR_NAME + ACTUATOR_NAME)
+    if not os.path.exists(TEST_DIR + SELECT_DIR_NAME):
+        os.mkdir(TEST_DIR + SELECT_DIR_NAME)
+        os.mkdir(TEST_DIR + SELECT_DIR_NAME + SENSOR_NAME)
+        os.mkdir(TEST_DIR + SELECT_DIR_NAME + ACTUATOR_NAME)
+
 
 
 def main():
     os.chdir("Data")
-    folder = FOLDER
-    data_folder = "0. Raw\\"
-    data = "data.log"
-    parsed_data_folder = "1. Parsed\\"
-    selected_data_folder = SELECT_NAME
-    
+    create_dirs()
 
-    lines = []
-    with open(folder + data_folder + data, "r") as data:
-        lines = data.readlines()
+    sensor_lines = []
+    with open(TEST_DIR + DATA_DIR_NAME + DATA_NAME, "r") as data:
+        sensor_lines = data.readlines()
 
-    sensors = {}
+    actuator_lines = []
+    with open(TEST_DIR + DATA_DIR_NAME + EVENT_NAME, "r") as event:
+        actuator_lines = event.readlines()
 
-    time_offset = get_seconds_hhmmss(split_space_comma(lines[0])[1])
-
-    for line in lines:
-        line = split_space_comma(line)
-
-        time = get_seconds_hhmmss(line[1]) - time_offset + float(line[2])/1000
-        if (time < 0):
-            time += 86400
-        value = float(line[6][:-1])
-
-        if line[5] in sensors:
-            sensors[line[5]].append((time, value))
-        else:
-            sensors[line[5]] = [(time, value)]
-        
-    if not os.path.exists(folder + parsed_data_folder):
-        os.mkdir(folder + parsed_data_folder)
-    if not os.path.exists(folder + selected_data_folder):
-        os.mkdir(folder + selected_data_folder)
+    time_offset = parse_tools.get_seconds_hhmmss(parse_tools.split_space_comma(actuator_lines[0])[1])
+    sensors = parse_sensor_lines(sensor_lines, time_offset)
+    actuators = parse_actuator_lines(actuator_lines, time_offset)
 
     for sensor in sensors:
         sensor_filename = sensor + ".csv"
-        with open(folder + parsed_data_folder + sensor_filename, 'w', newline='') as sensor_file:
+        with open(TEST_DIR + PARSED_DIR_NAME + SENSOR_NAME + sensor_filename, 'w', newline='') as sensor_file:
             sensor_writer = csv.writer(sensor_file, delimiter=',')
             sensor_writer.writerows(sensors[sensor])
 
         if not SELECT_RANGE:
             continue
 
-        with open(folder + selected_data_folder + sensor_filename, 'w', newline='') as sensor_file:
+        with open(TEST_DIR + SELECT_DIR_NAME + SENSOR_NAME + sensor_filename, 'w', newline='') as sensor_file:
             sensor_writer = csv.writer(sensor_file, delimiter=',')
             for row in sensors[sensor]:
                 if LOWER < row[0] < UPPER:
                     sensor_writer.writerow(row)
+
+
+    for actuator in actuators:
+        actuator_filename = actuator + ".csv"
+        with open(TEST_DIR + PARSED_DIR_NAME + ACTUATOR_NAME + actuator_filename, 'w', newline='') as actuator_file:
+            actuator_writer = csv.writer(actuator_file, delimiter=',')
+            actuator_writer.writerows(actuators[actuator])
+
+        if not SELECT_RANGE:
+            continue
+
+        with open(TEST_DIR + SELECT_DIR_NAME + ACTUATOR_NAME + actuator_filename, 'w', newline='') as actuator_file:
+            actuator_writer = csv.writer(actuator_file, delimiter=',')
+            for row in actuators[actuator]:
+                if LOWER < row[0] < UPPER:
+                    actuator_writer.writerow(row)
+
+
+def parse_sensor_lines(lines, time_offset):
+    sensors = {}
+    for line in lines:
+        line_split = parse_tools.split_space_comma(line)
+        time_hhmmss = line_split[1]
+        time_ms = line_split[2]
+        sensor_name = line_split[5]
+        sensor_value = line_split[6]
+
+        time = parse_tools.get_seconds_hhmmss(time_hhmmss) + float(time_ms)/1000 - time_offset
+        if (time < 0):
+            time += 86400   
+
+        value = float(sensor_value[:-1])
+
+        if sensor_name not in sensors:
+            sensors[sensor_name] = [(time, value)]
+        else:
+            sensors[sensor_name].append((time, value))
+    return sensors
+
+
+def parse_actuator_lines(lines, time_offset):
+    actuators = {}
+    for line in lines:
+        # Ignore servos for now
+        if "ON" not in line and "OFF" not in line:
+            continue
+        line_split = parse_tools.split_space_comma(line)
+        time_hhmmss = line_split[1]
+        time_ms = line_split[2]
+        time = parse_tools.get_seconds_hhmmss(time_hhmmss) + float(time_ms)/1000 - time_offset
+        if (time < 0):
+            time += 86400   
+    
+        actuator_name = line_split[6].replace("'", "")
+        actuator_value = 1 if ("ON" in line_split[-1]) else 0
+
+        if actuator_name not in actuators:
+            actuators[actuator_name] = [(time, actuator_value)]
+        else:
+            actuators[actuator_name].append((time, actuator_value))
+    print(actuators.keys())
+    return actuators
+
 
 if __name__ == "__main__":
     main()
