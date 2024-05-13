@@ -102,18 +102,27 @@ def parse_sensor_lines(lines, time_offset):
 def parse_actuator_lines(lines, time_offset):
     actuators = {}
     for line in lines:
-        # Ignore servos for now
-        if "ON" not in line and "OFF" not in line:
+        # Ignore extra lines
+        if "ON" not in line and "OFF" not in line and "rotated" not in line:
             continue
+
+
         line_split = parse_tools.split_space_comma(line)
         time_hhmmss = line_split[1]
         time_ms = line_split[2]
         time = parse_tools.get_seconds_hhmmss(time_hhmmss) + float(time_ms)/1000 - time_offset
         if (time < 0):
-            time += 86400   
-    
-        actuator_name = line_split[6].replace("'", "")
-        actuator_value = 1 if ("ON" in line_split[-1]) else 0
+            time += 86400
+
+        actuator_name = ""
+        actuator_value = 0
+        
+        if "rotated" in line:
+            actuator_name = line_split[9].replace(":", "")
+            actuator_value = line_split[-2]
+        else:
+            actuator_name = line_split[6].replace("'", "")
+            actuator_value = 1 if ("ON" in line_split[-1]) else 0
 
         if actuator_name not in actuators:
             actuators[actuator_name] = [(time, actuator_value)]
