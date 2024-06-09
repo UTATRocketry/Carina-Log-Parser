@@ -9,16 +9,16 @@ import time
 from utils import parse_tools
 
 SELECT_RANGE = True # Set to False if running for first time on new data
-LOWER, UPPER = 2600, 4100 # Set the range
-LOWER_F, UPPER_F = 4040, 4080 # Set the range
-TEST_DIR = "CF-O2\\"
+LOWER, UPPER = 27000, 28000 # Set the range
+LOWER_F, UPPER_F = 27800, 27850 # Set the range
+TEST_DIR = "CF-O3\\"
 DATA_NAME = "data.log"
 EVENT_NAME = "events.log"
 DATA_DIR_NAME = "raw\\"
-COMPILED_DIR_NAME = "1. Compiled\\"
+COMPILED_DIR_NAME = "compiled\\"
 
-SENSOR_NAME = "Sensors\\"
-ACTUATOR_NAME = "Actuators\\"
+SENSOR_NAME = "sensors\\"
+ACTUATOR_NAME = "actuators\\"
 
 
 def main():
