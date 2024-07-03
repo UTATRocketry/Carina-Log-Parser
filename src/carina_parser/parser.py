@@ -1,5 +1,7 @@
 
 import os
+import pandas as pd
+from queue import Queue
 from . import parse_tools
 
 
@@ -12,18 +14,21 @@ def has_been_parsed(test_dir):
     return os.path.exists(".cache\\" + test_dir + "sensors.csv") and os.path.exists(".cache\\" + test_dir + "actuators.csv")
 
 
-def parse_from_raw():
+def parse_from_raw(queue: Queue = None):
     sensor_lines = []
 
     with open("Data\\" + test_dir + "raw\\data.log", "r") as data:
         sensor_lines = data.readlines()
+    if queue: queue.put(2)
 
     actuator_lines = []
     with open("Data\\" + test_dir + "raw\\events.log", "r") as event:
         actuator_lines = event.readlines()
+    if queue: queue.put(3)
 
     time_offset = parse_tools.get_seconds_hhmmss(parse_tools.split_space_comma(actuator_lines[0])[1])
     sensors = parse_sensor_lines(sensor_lines, time_offset)
+    if queue: queue.put(4)
     actuators = parse_actuator_lines(actuator_lines, time_offset)
 
     return sensors, actuators
@@ -94,3 +99,31 @@ def parse_actuator_lines(lines, time_offset):
         actuators[actuator].sort(key=lambda x: x[0])
             
     return actuators
+
+def actuators_reformat(actuators: dict) -> None:
+    for actuator in actuators:
+        state = 0
+        for i in range(len(actuators[actuator])):
+            if actuators[actuator][i][1] == 1: 
+                state = 1
+            elif actuators[actuator][i][1] == 0:
+                state = 0
+            else:
+                actuators[actuator][i] = (actuators[actuator][i][0], state)
+
+
+def dataframe_format(sensors: dict, actuators: dict):
+    # Create a Pandas DataFrame with column names as the sensor and actuator names
+    sensor_df = pd.DataFrame(columns=["Time"] + list(sensors.keys()))
+    sensor_df["Time"] = [val[0] for val in sensors[list(sensors.keys())[0]]]
+    for sensor in sensors:
+        sensor_df[sensor] = [val[1] for val in sensors[sensor]]
+
+    actuator_df = pd.DataFrame(columns=["Time"] + list(actuators.keys()))
+    actuator_df["Time"] = [val[0] for val in actuators[list(actuators.keys())[0]]]
+    actuators_reformat(actuators)
+    for actuator in actuators:
+        actuator_df[actuator] = [val[1] for val in actuators[actuator]]
+    
+    return sensor_df, actuator_df
+
