@@ -1,0 +1,17 @@
+[T 05/07/2024 00:33:01] Program Started
+[T 05/07/2024 00:33:01] INFO: Clearing GUI Screen
+[T 05/07/2024 00:33:05] INFO: Begining data parsing in C:\Users\Brody Howard\Documents\GitHub\Carina-Log-Parser\Data\CF-O3\raw\
+[T 05/07/2024 00:33:05] INFO: Clearing GUI Screen
+[T 05/07/2024 00:33:05] INFO: Initalizing Parser
+[T 05/07/2024 00:33:05] INFO: Reading data.log
+[T 05/07/2024 00:33:07] INFO: Reading events.log
+[T 05/07/2024 00:33:09] INFO: Parsing Sensor Lines
+[T 05/07/2024 00:33:22] INFO: Parsing Actuator Lines
+[T 05/07/2024 00:33:24] INFO: Reformating Actuators Data and Converting to Dataframes
+[T 05/07/2024 00:33:24] INFO: Creating Graphs
+[T 05/07/2024 00:33:27] INFO: Generated 14 Plots
+[T 05/07/2024 00:33:27] INFO: Data Parsing and Plotting Complete
+[T 05/07/2024 00:33:27] INFO: Clearing GUI Screen
+[T 05/07/2024 00:33:35] INFO: Clearing GUI Screen
+[T 05/07/2024 00:34:26] INFO: Clearing GUI Screen
+[T 05/07/2024 00:34:28] INFO: Clearing GUI Screen
