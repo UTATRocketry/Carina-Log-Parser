@@ -11,18 +11,17 @@ def init(input_test_dir):
 
 
 def has_been_parsed(test_dir):
-    return os.path.exists(".cache\\" + test_dir + "sensors.csv") and os.path.exists(".cache\\" + test_dir + "actuators.csv")
-
+    return os.path.exists(os.path.join(os.getcwd(), ".cache", test_dir, "sensors.csv")) and os.path.exists(os.path.join(os.getcwd(), ".cache", test_dir, "actuators.csv"))
 
 def parse_from_raw(queue: Queue = None):
     sensor_lines = []
 
-    with open("Data\\" + test_dir + "raw\\data.log", "r") as data:
+    with open(os.path.join(os.getcwd(), "Data", test_dir, "raw", "data.log"), "r") as data:
         sensor_lines = data.readlines()
     if queue: queue.put(2)
 
     actuator_lines = []
-    with open("Data\\" + test_dir + "raw\\events.log", "r") as event:
+    with open(os.path.join(os.getcwd(), "Data", test_dir, "raw", "events.log"), "r") as event:
         actuator_lines = event.readlines()
     if queue: queue.put(3)
 

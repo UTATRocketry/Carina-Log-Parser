@@ -8,7 +8,6 @@ from tkinter import messagebox
 from datetime import datetime
 
 
-
 def textbox_caller(func, text_box: CTkEntry):
     def call_func():
         text = text_box.get()
@@ -76,8 +75,8 @@ def clear_gui(window: CTk) -> None:
     append_to_log("Clearing GUI Screen", "INFO") 
 
 def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = None) -> None:
-    if not os.path.exists("Data\\" + folder_name + "Plots"):
-        os.mkdir("Data\\" + folder_name + "Plots")
+    if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
+        os.mkdir(os.path.join(os.getcwd(), "Data", folder_name, "Plots"))
 
     start_ind = get_xaxis_index(xaxis[1], start)
     end_ind = get_xaxis_index(xaxis[1], end)
@@ -85,16 +84,17 @@ def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = N
     plt.title(f"{yaxis[0]} vs {xaxis[0]} Plot")
     plt.xlabel(xaxis[0])
     plt.ylabel(yaxis[0])
-    plt.savefig(f"Data\\{folder_name}Plots\\{yaxis[0]}vs{xaxis[0]}.jpg")
+    plt.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{yaxis[0]}vs{xaxis[0]}.jpg"))
     plt.close()
 
 def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None) -> None:
-    if not os.path.exists("Data\\" + folder_name + "Plots"):
-        os.mkdir("Data\\" + folder_name + "Plots")
+    if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
+        os.mkdir(os.path.join(os.getcwd(),"Data", folder_name, "Plots"))
 
     time = dataframe["Time"].to_list()
     start = get_xaxis_index(time, start_time)
     end = get_xaxis_index(time, end_time)
+    if start == end: start -= 1
     time = time[start:end]
     if type.lower() == "actuator":
         time.append(time[-1] + 0.01)
@@ -109,7 +109,7 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
             plt.title(column + " vs Time Plot")
             plt.xlabel("Time (s)")
             plt.ylabel(column)
-            plt.savefig(f"Data\\{folder_name}Plots\\{column}_[T{t.strftime('%Hh%Mm%Ss', t.gmtime(start_time))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end_time))}].jpg")
+            plt.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column}_[T{t.strftime('%Hh%Mm%Ss', t.gmtime(start_time))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end_time))}].jpg"))
             plt.close()
 
 def get_xaxis_index(xaxis: list, given_time) -> int:
