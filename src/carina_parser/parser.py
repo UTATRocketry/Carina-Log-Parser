@@ -126,4 +126,3 @@ def dataframe_format(sensors: dict, actuators: dict):
         actuator_df[actuator] = [val[1] for val in actuators[actuator]]
     
     return sensor_df, actuator_df
-

@@ -1,10 +1,12 @@
-from customtkinter import *
-from tkinter import messagebox
-from datetime import datetime
+
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import time as t
+from customtkinter import *
+from tkinter import messagebox
+from datetime import datetime
+
 
 
 def textbox_caller(func, text_box: CTkEntry):
@@ -123,7 +125,7 @@ def get_xaxis_index(xaxis: list, given_time) -> int:
 def append_to_log(msg: str, mode: str = 'info') -> None:
     try:
         with open("program.log", "a") as file:
-            file.write(f'[T {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}] {mode}: {msg}\n')
+            file.write(f'[T {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}], {mode}: {msg}\n')
             file.close()
     except Exception:
         gui_error("Error adding to program log")

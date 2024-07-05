@@ -11,7 +11,7 @@ class Carina_Plotter(CTk):
         super().__init__()
         self.queue = Queue()
         with open("program.log", "w") as file:
-            file.write(f'[T {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}] INFO: Program Started\n')
+            file.write(f'[T {datetime.now().strftime("%d/%m/%Y %H:%M:%S")}], INFO: Program Started\n')
             file.close()
         set_appearance_mode("dark")
         set_default_color_theme("blue")
