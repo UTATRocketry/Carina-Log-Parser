@@ -9,9 +9,10 @@ import time as t
 
 def textbox_caller(func, text_box: CTkEntry):
     def call_func():
-        text = text_box.get() + "\\"
-        folder = os.getcwd() + "\\Data\\" + text + "raw\\"
-        if not os.path.exists(folder + "data.log") or not os.path.exists(folder + "events.log"):
+        text = text_box.get()
+        folder = os.path.join(os.getcwd(), "Data", text, "raw")
+        print(folder)        
+        if not os.path.exists(os.path.join(folder, "data.log")) or not os.path.exists(os.path.join(folder, "events.log")):
             gui_error("File Path not Found")
             return
         append_to_log(f'Begining data parsing in {folder}', "INFO")
