@@ -89,7 +89,7 @@ class Carina_Plotter(CTk):
         else:
             yaxis = (yaxis_key, self.actuator_df[yaxis_key].to_list())
         tools.single_plot(self.folder_name, xaxis, yaxis, start, end)
-        tools.append_to_log("Created a new custom plot", "INFO:")
+        tools.append_to_log("Created a new custom plot", "INFO:")      
             
     def data_screen(self) -> None:
         tools.clear_gui(self)

@@ -1,5 +1,6 @@
 
 import os
+import multiprocessing
 import pandas as pd
 from queue import Queue
 from . import parse_tools
@@ -15,7 +16,6 @@ def has_been_parsed(test_dir):
 
 def parse_from_raw(queue: Queue = None):
     sensor_lines = []
-
     with open(os.path.join(os.getcwd(), "Data", test_dir, "raw", "data.log"), "r") as data:
         sensor_lines = data.readlines()
     if queue: queue.put(2)
@@ -26,12 +26,30 @@ def parse_from_raw(queue: Queue = None):
     if queue: queue.put(3)
 
     time_offset = parse_tools.get_seconds_hhmmss(parse_tools.split_space_comma(actuator_lines[0])[1])
-    sensors = parse_sensor_lines(sensor_lines, time_offset)
+   
+    num_cores = max(1, multiprocessing.cpu_count() - 4)
+    segment_size = len(sensor_lines) // num_cores
+    with multiprocessing.Pool(num_cores) as pool:
+        segments = [(sensor_lines[i * segment_size:(i + 1) * segment_size], time_offset) for i in range(num_cores)]
+        if len(sensor_lines) % num_cores != 0:
+            segments.append((sensor_lines[num_cores * segment_size:], time_offset))
+
+        results = pool.starmap(parse_sensor_lines, segments)
+    
+    sensors = results[0]
+    i = 1
+    while i < len(results):
+        for sensor_name, data in results[i].items():
+            if sensor_name in sensors:
+                sensors[sensor_name].extend(data)
+            else:
+                sensors[sensor_name] = data
+        i += 1
+
     if queue: queue.put(4)
     actuators = parse_actuator_lines(actuator_lines, time_offset)
 
     return sensors, actuators
-
 
 def parse_sensor_lines(lines, time_offset):
     sensors = {}
@@ -42,8 +60,8 @@ def parse_sensor_lines(lines, time_offset):
         sensor_name = line_split[5]
         sensor_value = line_split[6]
 
-        time = parse_tools.get_seconds_hhmmss(time_hhmmss) + float(time_ms)/1000 - time_offset
-        if (time < 0):
+        time = parse_tools.get_seconds_hhmmss(time_hhmmss) + float(time_ms) / 1000 - time_offset
+        if time < 0:
             time += 86400   
 
         value = float(sensor_value[:-1])
@@ -52,8 +70,8 @@ def parse_sensor_lines(lines, time_offset):
             sensors[sensor_name] = [(time, value)]
         else:
             sensors[sensor_name].append((time, value))
-    return sensors
 
+    return sensors
 
 def parse_actuator_lines(lines, time_offset):
     actuators = {}

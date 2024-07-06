@@ -80,12 +80,12 @@ def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = N
 
     start_ind = get_xaxis_index(xaxis[1], start)
     end_ind = get_xaxis_index(xaxis[1], end)
+    p = plt.figure(f"{yaxis[0]}vs{xaxis[0]}")
     plt.plot(xaxis[1][start_ind:end_ind], yaxis[1][start_ind:end_ind])
     plt.title(f"{yaxis[0]} vs {xaxis[0]} Plot")
     plt.xlabel(xaxis[0])
     plt.ylabel(yaxis[0])
-    plt.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{yaxis[0]}vs{xaxis[0]}.jpg"))
-    plt.close()
+    p.show()
 
 def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
@@ -98,9 +98,9 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
     time = time[start:end]
     if type.lower() == "actuator":
         time.append(time[-1] + 0.01)
-
     for column in dataframe.columns:
-        if column != "Time": 
+        if column != "Time":
+            p = plt.figure(column + "vs Time Plot")
             data = dataframe[column].to_list()[start:end]
             if type.lower() == "sensor":
                 plt.plot(time, data)
@@ -109,8 +109,7 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
             plt.title(column + " vs Time Plot")
             plt.xlabel("Time (s)")
             plt.ylabel(column)
-            plt.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column}_[T{t.strftime('%Hh%Mm%Ss', t.gmtime(start_time))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end_time))}].jpg"))
-            plt.close()
+            p.show() 
 
 def get_xaxis_index(xaxis: list, given_time) -> int:
     if given_time == 0:
