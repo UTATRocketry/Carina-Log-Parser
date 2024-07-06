@@ -8,7 +8,7 @@ from tkinter import messagebox
 from datetime import datetime
 
 
-def textbox_caller(func, text_box: CTkEntry):
+def textbox_caller(func, text_box: CTkEntry, save: IntVar):
     def call_func():
         text = text_box.get()
         folder = os.path.join(os.getcwd(), "Data", text, "raw")
@@ -16,7 +16,7 @@ def textbox_caller(func, text_box: CTkEntry):
             gui_error("File Path not Found")
             return
         append_to_log(f'Begining data parsing in {folder}', "INFO")
-        func(text)
+        func(text, save.get())
     return call_func
 
 def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry):
@@ -74,7 +74,7 @@ def clear_gui(window: CTk) -> None:
         window.children[child].destroy() 
     append_to_log("Clearing GUI Screen", "INFO") 
 
-def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = None) -> None:
+def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = None, save:int = 0) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
         os.mkdir(os.path.join(os.getcwd(), "Data", folder_name, "Plots"))
 
@@ -87,7 +87,10 @@ def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = N
     plt.ylabel(yaxis[0])
     p.show()
 
-def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None) -> None:
+    if save == 1:
+        p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{yaxis[0]} vs {xaxis[0]} Plot.jpg"))
+
+def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None, save:int = 0) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
         os.mkdir(os.path.join(os.getcwd(),"Data", folder_name, "Plots"))
 
@@ -110,6 +113,8 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
             plt.xlabel("Time (s)")
             plt.ylabel(column)
             p.show() 
+            if save == 1:
+                p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column} vs Time Plot.jpg"))
 
 def get_xaxis_index(xaxis: list, given_time) -> int:
     if given_time == 0:

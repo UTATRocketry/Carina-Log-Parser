@@ -24,17 +24,30 @@ class Carina_Plotter(CTk):
         boot_frm = CTkFrame(master=self)
         greeting_lbl = CTkLabel(master=boot_frm, text="Welcome to the Carina Data Plotter", text_color="lightblue", font=("Arial", 30))
         prompt_frm = CTkFrame(master=boot_frm)
+        prompt_frm.rowconfigure((0, 1), weight=2)
+        prompt_frm.columnconfigure((0, 1, 2), weight=1)
         prompt_lbl = CTkLabel(master=prompt_frm, text='Enter folder name which contains the data and events logs in a "\\raw" sub folder (Data\\_____\\raw):  ', font=("Arial", 16), anchor="center")
-        folder_ent = CTkEntry(master=prompt_frm, font=("Arial", 12), width=150)
-        start_program_btn = CTkButton(master=boot_frm, text="Start Program", font=("Arial", 20), width=120, anchor="center", command=tools.textbox_caller(self.loading_screen, folder_ent))
+        folder_ent = CTkEntry(master=prompt_frm, font=("Arial", 12), width=100)
+        save_frm = CTkFrame(master=prompt_frm)
+        prompt_frm.rowconfigure((0), weight=1)
+        prompt_frm.columnconfigure((0, 1, 2), weight=1)
+        save_lbl = CTkLabel(master=save_frm, font=("Arial", 16), text="Save Plots:", anchor="center")
+        save = IntVar(value=0)
+        save_rdbtn = CTkRadioButton(master=save_frm, text="Yes", font=("Arial", 12), value=1, variable=save)
+        nosave_rdbtn = CTkRadioButton(master=save_frm, text="No", font=("Arial", 12), value=0, variable=save)
+        start_program_btn = CTkButton(master=boot_frm, text="Start Program", font=("Arial", 20), width=120, anchor="center", command=tools.textbox_caller(self.loading_screen, folder_ent, save))
         greeting_lbl.pack(pady=20)
-        prompt_lbl.pack(pady=5, padx=10)
-        folder_ent.pack(pady=10, padx=10)
+        prompt_lbl.grid(row=0, column=0, columnspan=2, padx=(10, 10), pady=(10, 5), sticky="nsew")
+        folder_ent.grid(row=0, column=2, padx=(0, 10), pady=(10, 10), sticky="nsew")
+        save_lbl.grid(row=0, column=0, padx=(10, 5), pady=(10, 10), sticky="nsew")
+        save_rdbtn.grid(row=0, column=1, padx=(30, 0), pady=(10, 10), sticky="nsew")
+        nosave_rdbtn.grid(row=0, column=2, padx=(0, 10), pady=(10, 10), sticky="nsew")
+        save_frm.grid(row=2, column=0, columnspan=3, pady=10, padx=10)
         prompt_frm.pack(padx=5, expand=True)
         start_program_btn.pack(pady=20)
         boot_frm.pack(pady=20, padx=30, fill="both", expand=True)
 
-    def loading_screen(self, folder_name: str) -> None:
+    def loading_screen(self, folder_name: str, save: int) -> None:
         tools.clear_gui(self)
         self.folder_name = folder_name
         messages = ["Initalizing Parser", "Reading data.log", "Reading events.log", "Parsing Sensor Lines", "Parsing Actuator Lines", "Reformating Actuators Data and Converting to Dataframes", "Creating Graphs", "Complete"]
@@ -57,7 +70,7 @@ class Carina_Plotter(CTk):
             info_lbl.configure(text=messages[val])
             tools.append_to_log(messages[val], "INFO")
             self.update()
-        self.plot_all()
+        self.plot_all(save=save)
         progress_bar.set(1)
         info_lbl.configure(text=messages[7])
         self.update()
@@ -74,12 +87,12 @@ class Carina_Plotter(CTk):
         self.queue.put(6)
         return
     
-    def plot_all(self, start_time = 0, end_time = None) -> None:
-        tools.generate_plots(self.folder_name, self.sensor_df, "sensor", start_time, end_time)
-        tools.generate_plots(self.folder_name, self.actuator_df, "actuator", start_time, end_time)
+    def plot_all(self, start_time = 0, end_time = None, save: int = 0) -> None:
+        tools.generate_plots(self.folder_name, self.sensor_df, "sensor", start_time, end_time, save)
+        tools.generate_plots(self.folder_name, self.actuator_df, "actuator", start_time, end_time, save)
         tools.append_to_log(f'Generated {len(self.sensor_df.columns) + len(self.actuator_df.columns) - 2} Plots', "INFO")
 
-    def custom_plot(self, xaxis_key: str, yaxis_key: str, start = 0, end = None):
+    def custom_plot(self, xaxis_key: str, yaxis_key: str, start = 0, end = None, save:int = 0):
         if xaxis_key in self.sensor_df.columns:
             xaxis = (xaxis_key, self.sensor_df[xaxis_key].to_list())
         else:
@@ -88,7 +101,7 @@ class Carina_Plotter(CTk):
             yaxis = (yaxis_key, self.sensor_df[yaxis_key].to_list())
         else:
             yaxis = (yaxis_key, self.actuator_df[yaxis_key].to_list())
-        tools.single_plot(self.folder_name, xaxis, yaxis, start, end)
+        tools.single_plot(self.folder_name, xaxis, yaxis, start, end, save)
         tools.append_to_log("Created a new custom plot", "INFO:")      
             
     def data_screen(self) -> None:
