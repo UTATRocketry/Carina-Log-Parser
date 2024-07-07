@@ -19,7 +19,7 @@ def textbox_caller(func, text_box: CTkEntry, save: IntVar):
         func(text, save.get())
     return call_func
 
-def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry):
+def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry, save: IntVar):
     def call_func2():
         try:
             start = start_box.get()
@@ -37,12 +37,12 @@ def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry):
                     gui_error("End time cannot be less then Start time")
                     append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
                     return
-                func(start, end)
+                func(start, end, save.get())
         except Exception:
             gui_error("Invalid Start or End Time")
     return call_func2
 
-def custom_plot_caller(func, start_box: CTkEntry, end_box: CTkEntry, option1: CTkOptionMenu, option2: CTkOptionMenu): 
+def custom_plot_caller(func, start_box: CTkEntry, end_box: CTkEntry, option1: CTkOptionMenu, option2: CTkOptionMenu, save: IntVar): 
     def call_func2():
         try:
             start = start_box.get()
@@ -60,7 +60,7 @@ def custom_plot_caller(func, start_box: CTkEntry, end_box: CTkEntry, option1: CT
                     gui_error("End cannot be less then Start")
                     append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
                     return
-                func(option1.get(), option2.get(), start, end)
+                func(option1.get(), option2.get(), start, end, save.get())
         except Exception:
             gui_error("Invalid Start or End value")
     return call_func2
@@ -74,6 +74,7 @@ def clear_gui(window: CTk) -> None:
         window.children[child].destroy() 
     append_to_log("Clearing GUI Screen", "INFO") 
 
+# add units
 def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = None, save:int = 0) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
         os.mkdir(os.path.join(os.getcwd(), "Data", folder_name, "Plots"))
@@ -83,12 +84,12 @@ def single_plot(folder_name: str, xaxis: tuple, yaxis: tuple, start = 0, end = N
     p = plt.figure(f"{yaxis[0]}vs{xaxis[0]}")
     plt.plot(xaxis[1][start_ind:end_ind], yaxis[1][start_ind:end_ind])
     plt.title(f"{yaxis[0]} vs {xaxis[0]} Plot")
-    plt.xlabel(xaxis[0])
-    plt.ylabel(yaxis[0])
+    plt.xlabel(get_axis_title(xaxis[0]))
+    plt.ylabel(get_axis_title(yaxis[0]))
     p.show()
 
     if save == 1:
-        p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{yaxis[0]} vs {xaxis[0]} Plot.jpg"))
+        p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{yaxis[0]} vs {xaxis[0]} Plot {t.strftime('%Hh%Mm%Ss', t.gmtime(start))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end))}.jpg"))
 
 def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None, save:int = 0) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
@@ -111,10 +112,10 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
                 plt.stairs(data, time)
             plt.title(column + " vs Time Plot")
             plt.xlabel("Time (s)")
-            plt.ylabel(column)
+            plt.ylabel(get_axis_title(column))
             p.show() 
             if save == 1:
-                p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column} vs Time Plot.jpg"))
+                p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column} vs Time Plot T[{t.strftime('%Hh%Mm%Ss', t.gmtime(start_time))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end_time))}].jpg"))
 
 def get_xaxis_index(xaxis: list, given_time) -> int:
     if given_time == 0:
@@ -126,6 +127,18 @@ def get_xaxis_index(xaxis: list, given_time) -> int:
             if t > given_time:
                 return i - 1
             
+def get_axis_title(name: str):
+    axis_title = name + " ("
+    unit = name[0]
+    if unit == "P":
+        axis_title += "psi)"
+    if unit == "M":
+        axis_title += "kg)"
+    if unit == "B" or unit == "S" or unit == "E":
+        axis_title += "On/Off)"
+    return axis_title
+
+            
 def append_to_log(msg: str, mode: str = 'info') -> None:
     try:
         with open("program.log", "a") as file:
@@ -133,4 +146,5 @@ def append_to_log(msg: str, mode: str = 'info') -> None:
             file.close()
     except Exception:
         gui_error("Error adding to program log")
+
 

@@ -1,14 +1,30 @@
-[T 06/07/2024 19:52:53], INFO: Program Started
-[T 06/07/2024 19:52:53], INFO: Clearing GUI Screen
-[T 06/07/2024 19:53:03], INFO: Begining data parsing in C:\Users\Brody Howard\Documents\GitHub\Carina-Log-Parser\Data\CF-O3\raw
-[T 06/07/2024 19:53:03], INFO: Clearing GUI Screen
-[T 06/07/2024 19:53:03], INFO: Initalizing Parser
-[T 06/07/2024 19:53:03], INFO: Reading data.log
-[T 06/07/2024 19:53:04], INFO: Reading events.log
-[T 06/07/2024 19:53:04], INFO: Parsing Sensor Lines
-[T 06/07/2024 19:53:13], INFO: Parsing Actuator Lines
-[T 06/07/2024 19:53:14], INFO: Reformating Actuators Data and Converting to Dataframes
-[T 06/07/2024 19:53:14], INFO: Creating Graphs
-[T 06/07/2024 19:53:18], INFO: Generated 14 Plots
-[T 06/07/2024 19:53:19], INFO: Data Parsing and Plotting Complete
-[T 06/07/2024 19:53:19], INFO: Clearing GUI Screen
+[T 07/07/2024 12:01:04], INFO: Program Started
+[T 07/07/2024 12:01:04], INFO: Clearing GUI Screen
+[T 07/07/2024 12:01:15], INFO: Begining data parsing in C:\Users\Brody Howard\Documents\GitHub\Carina-Log-Parser\Data\CF-O3\raw
+[T 07/07/2024 12:01:15], INFO: Clearing GUI Screen
+[T 07/07/2024 12:01:15], INFO: Initalizing Parser
+[T 07/07/2024 12:01:15], INFO: Reading data.log
+[T 07/07/2024 12:01:16], INFO: Reading events.log
+[T 07/07/2024 12:01:16], INFO: Parsing Sensor Lines
+[T 07/07/2024 12:01:23], INFO: Parsing Actuator Lines
+[T 07/07/2024 12:01:24], INFO: Reformating Actuators Data and Converting to Dataframes
+[T 07/07/2024 12:01:24], INFO: Creating Graphs
+[T 07/07/2024 12:01:27], INFO: Generated 14 Plots
+[T 07/07/2024 12:01:28], INFO: Data Parsing and Plotting Complete
+[T 07/07/2024 12:01:28], INFO: Clearing GUI Screen
+[T 07/07/2024 12:02:30], INFO:: Created a new custom plot
+[T 07/07/2024 12:02:41], INFO:: Created a new custom plot
+[T 07/07/2024 12:03:12], INFO: Generated 14 Plots
+[T 07/07/2024 12:04:11], INFO:: Created a new custom plot
+[T 07/07/2024 12:04:24], ERROR: End cannot be less then Start
+[T 07/07/2024 12:04:24], ERROR: Failed to create graphs as start time was greater then end time (start:27000.0, end:2720.0)
+[T 07/07/2024 12:04:28], INFO:: Created a new custom plot
+[T 07/07/2024 12:04:43], INFO:: Created a new custom plot
+[T 07/07/2024 12:04:49], INFO:: Created a new custom plot
+[T 07/07/2024 12:05:13], INFO:: Created a new custom plot
+[T 07/07/2024 12:05:17], INFO:: Created a new custom plot
+[T 07/07/2024 12:05:24], INFO:: Created a new custom plot
+[T 07/07/2024 12:05:37], INFO:: Created a new custom plot
+[T 07/07/2024 12:05:48], INFO:: Created a new custom plot
+[T 07/07/2024 12:06:10], INFO:: Created a new custom plot
+[T 07/07/2024 12:06:16], INFO:: Created a new custom plot
