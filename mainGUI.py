@@ -167,7 +167,7 @@ class Carina_Plotter(CTk):
         save2_frm = CTkFrame(master=custom_plot_frm)
         save2_frm.rowconfigure((0), weight=1)
         save2_frm.columnconfigure((0, 1, 2), weight=1)
-        save2_lbl = CTkLabel(master=save2_frm, font=("Arial", 16), text="Save Plots:", anchor="center")
+        save2_lbl = CTkLabel(master=save2_frm, font=("Arial", 16), text="Save Plot:", anchor="center")
         save2 = IntVar(value=0)
         save2_rdbtn = CTkRadioButton(master=save2_frm, text="Yes", font=("Arial", 12), value=1, variable=save2)
         nosave2_rdbtn = CTkRadioButton(master=save2_frm, text="No", font=("Arial", 12), value=0, variable=save2)
