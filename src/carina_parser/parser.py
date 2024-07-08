@@ -5,6 +5,8 @@ import pandas as pd
 from queue import Queue
 from . import parse_tools
 
+#Add mass flow rate column
+# also fix actouator data so it mathes same time scale
 
 def init(input_test_dir):
     global test_dir
@@ -117,7 +119,7 @@ def parse_actuator_lines(lines, time_offset):
             
     return actuators
 
-def actuators_reformat(actuators: dict) -> None:
+def actuators_reformat(actuators: dict) -> None: 
     for actuator in actuators:
         state = 0
         for i in range(len(actuators[actuator])):
