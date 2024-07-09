@@ -2,8 +2,10 @@
 import os
 import multiprocessing
 import pandas as pd
+from scipy.signal import savgol_filter
 from queue import Queue
 from . import parse_tools
+import matplotlib.pyplot as plt
 
 #Add mass flow rate column
 # also fix actouator data so it mathes same time scale
@@ -47,8 +49,11 @@ def parse_from_raw(queue: Queue = None):
             else:
                 sensors[sensor_name] = data
         i += 1
-
     if queue: queue.put(4)
+
+    mass_flow_rate(sensors)
+    if queue: queue.put(5)
+
     actuators = parse_actuator_lines(actuator_lines, time_offset)
 
     return sensors, actuators
@@ -118,6 +123,25 @@ def parse_actuator_lines(lines, time_offset):
         actuators[actuator].sort(key=lambda x: x[0])
             
     return actuators
+
+def mass_flow_rate(sensors: dict) -> None: # remove noise first before caluclating derivative
+
+    mass_flow = []
+    time = [val[0] for val in sensors[list(sensors.keys())[0]]]
+    h = time[1] - time[0]
+    if "MFT" in sensors.keys():
+        mass = [val[1] for val in sensors["MFT"]]
+    else:
+        mass = [val[1] for val in sensors["MOT"]]
+    mass = savgol_filter(mass, len(mass)//300, 3)
+    plt.plot(time, mass)
+    plt.show()
+
+    for i in range(len(mass) - 1): 
+        res = (mass[i+1] - mass[i]) / h
+        mass_flow.append((time[i], res))
+    mass_flow.append((time[i+1], 0))
+    sensors["MFR"] = mass_flow
 
 def actuators_reformat(actuators: dict) -> None: 
     for actuator in actuators:

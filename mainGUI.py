@@ -52,7 +52,7 @@ class Carina_Plotter(CTk):
     def loading_screen(self, folder_name: str, save: int) -> None:
         tools.clear_gui(self)
         self.folder_name = folder_name
-        messages = ["Initalizing Parser", "Reading data.log", "Reading events.log", "Parsing Sensor Lines", "Parsing Actuator Lines", "Reformating Actuators Data and Converting to Dataframes", "Creating Graphs", "Complete"]
+        messages = ["Initalizing Parser", "Reading data.log", "Reading events.log", "Parsing Sensor Lines", "Calculating Mass Flow Rate", "Parsing Actuator Lines", "Reformating Actuators Data and Converting to Dataframes", "Creating Graphs", "Complete"]
         loading_frm = CTkFrame(master=self)
         loading_lbl = CTkLabel(master=loading_frm, text="Loading...", font=("Arial", 25))
         progress_bar = CTkProgressBar(master=loading_frm, orientation="horizontal", width = 190, height = 25)
@@ -67,7 +67,7 @@ class Carina_Plotter(CTk):
         progress = 0
         while progress < 0.85:
             val = self.queue.get()
-            progress = val/7
+            progress = val/8
             progress_bar.set(progress)
             info_lbl.configure(text=messages[val])
             tools.append_to_log(messages[val], "INFO")
@@ -84,9 +84,9 @@ class Carina_Plotter(CTk):
         parser.init(folder_name)
         self.queue.put(1)
         sensors, actuators = parser.parse_from_raw(self.queue)
-        self.queue.put(5)
-        self.sensor_df, self.actuator_df = parser.dataframe_format(sensors, actuators)
         self.queue.put(6)
+        self.sensor_df, self.actuator_df = parser.dataframe_format(sensors, actuators)
+        self.queue.put(7)
         return
     
     def plot_all(self, start_time = 0, end_time = None, save: int = 0) -> None:
