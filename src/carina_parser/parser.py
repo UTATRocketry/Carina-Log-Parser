@@ -1,5 +1,6 @@
 
 import os
+import numpy as np
 import multiprocessing
 import pandas as pd
 from scipy.signal import savgol_filter
@@ -125,22 +126,25 @@ def parse_actuator_lines(lines, time_offset):
     return actuators
 
 def mass_flow_rate(sensors: dict) -> None: # remove noise first before caluclating derivative
+    time = [val[0] for val in sensors[list(sensors.keys())[0]]]
+    if "MFT" in sensors.keys():
+        mass = [data[1] for data in sensors["MFT"]]
+    else:
+        mass = [data[1] for data in sensors["MOT"]]
+    mass = savgol_filter(mass, len(mass)//400, 4) #Noise filter
 
     mass_flow = []
-    time = [val[0] for val in sensors[list(sensors.keys())[0]]]
-    h = time[1] - time[0]
-    if "MFT" in sensors.keys():
-        mass = [val[1] for val in sensors["MFT"]]
-    else:
-        mass = [val[1] for val in sensors["MOT"]]
-    mass = savgol_filter(mass, len(mass)//300, 3)
-    plt.plot(time, mass)
-    plt.show()
-
-    for i in range(len(mass) - 1): 
-        res = (mass[i+1] - mass[i]) / h
+    for i in range(len(mass)):
+        inds = indexes_from_ms(500, i, time) #100 - ok # 500 good # add multiprocessing
+        res = (mass[inds[1]] - mass[inds[0]]) / (time[inds[1]] - time[inds[0]])
         mass_flow.append((time[i], res))
-    mass_flow.append((time[i+1], 0))
+
+    mf = [val[1] for val in mass_flow]
+    mf = savgol_filter(mf, len(mf)//500, 4)
+
+    for i in range(len(mass_flow)):
+        mass_flow[i] = (time[i], mf[i])
+
     sensors["MFR"] = mass_flow
 
 def actuators_reformat(actuators: dict) -> None: 
@@ -169,3 +173,14 @@ def dataframe_format(sensors: dict, actuators: dict):
         actuator_df[actuator] = [val[1] for val in actuators[actuator]]
     
     return sensor_df, actuator_df
+
+def indexes_from_ms(time_ms: int, cur_ind: int,  time: list) -> (tuple):
+    ms = time_ms/1000
+    i = cur_ind
+    while i < len(time) and time[i] - time[cur_ind] < ms:
+        i += 1
+    j = cur_ind
+    while j >= 0 and time[cur_ind] - time[j] < ms:
+        j -= 1
+
+    return (j, min(i, len(time) - 1))
