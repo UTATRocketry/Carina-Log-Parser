@@ -3,13 +3,9 @@ import os
 import numpy as np
 import multiprocessing
 import pandas as pd
-from scipy.signal import savgol_filter
 from queue import Queue
 from . import parse_tools
-import matplotlib.pyplot as plt
 
-#Add mass flow rate column
-# also fix actouator data so it mathes same time scale
 
 def init(input_test_dir):
     global test_dir
@@ -51,9 +47,6 @@ def parse_from_raw(queue: Queue = None):
                 sensors[sensor_name] = data
         i += 1
     if queue: queue.put(4)
-
-    mass_flow_rate(sensors)
-    if queue: queue.put(5)
 
     actuators = parse_actuator_lines(actuator_lines, time_offset)
 
@@ -125,27 +118,20 @@ def parse_actuator_lines(lines, time_offset):
             
     return actuators
 
-def mass_flow_rate(sensors: dict) -> None: # remove noise first before caluclating derivative
-    time = [val[0] for val in sensors[list(sensors.keys())[0]]]
-    if "MFT" in sensors.keys():
-        mass = [data[1] for data in sensors["MFT"]]
+def mass_flow_rate(sensors: pd.DataFrame, start_ind: int, end_ind: int) -> None: 
+    time = sensors["Time"].to_list()[start_ind:end_ind]
+    if "MFT" in sensors.columns:
+        mass = sensors["MFT"].to_list()[start_ind:end_ind]
     else:
-        mass = [data[1] for data in sensors["MOT"]]
-    mass = savgol_filter(mass, len(mass)//400, 4) #Noise filter
+        mass = sensors["MOT"].to_list()[start_ind:end_ind]
 
     mass_flow = []
     for i in range(len(mass)):
-        inds = indexes_from_ms(500, i, time) #100 - ok # 500 good # add multiprocessing
+        inds = indexes_from_ms(900, i, time) #100 - ok # 500 good # add multiprocessing
         res = (mass[inds[1]] - mass[inds[0]]) / (time[inds[1]] - time[inds[0]])
-        mass_flow.append((time[i], res))
+        mass_flow.append(res)
 
-    mf = [val[1] for val in mass_flow]
-    mf = savgol_filter(mf, len(mf)//500, 4)
-
-    for i in range(len(mass_flow)):
-        mass_flow[i] = (time[i], mf[i])
-
-    sensors["MFR"] = mass_flow
+    return mass_flow
 
 def actuators_reformat(actuators: dict) -> None: 
     for actuator in actuators:
@@ -158,6 +144,27 @@ def actuators_reformat(actuators: dict) -> None:
             else:
                 actuators[actuator][i] = (actuators[actuator][i][0], state)
 
+def fill_actuators(time: list, actuators: dict)->dict:
+    new_dict = {}
+    for name in actuators.keys():
+        if name == "Time":
+            continue
+        actuator = actuators[name]
+        new_list = []
+        prev_value = actuator[0][1]
+        l = len(actuator)
+        j = 0
+        for i in range(len(time)):
+            if j >= l:
+                new_list.append((time[i], prev_value))
+            elif time[i] < actuator[j][0]:
+                new_list.append((time[i], prev_value))
+            else:
+                new_list.append((actuator[j][0], actuator[j][1]))
+                prev_value = actuator[j][1]
+                j += 1
+        new_dict[name] = new_list
+    return new_dict
 
 def dataframe_format(sensors: dict, actuators: dict):
     # Create a Pandas DataFrame with column names as the sensor and actuator names
@@ -166,12 +173,13 @@ def dataframe_format(sensors: dict, actuators: dict):
     for sensor in sensors:
         sensor_df[sensor] = [val[1] for val in sensors[sensor]]
 
+    actuators_reformat(actuators)
+    actuators = fill_actuators(sensor_df["Time"].to_list(), actuators)
     actuator_df = pd.DataFrame(columns=["Time"] + list(actuators.keys()))
     actuator_df["Time"] = [val[0] for val in actuators[list(actuators.keys())[0]]]
-    actuators_reformat(actuators)
     for actuator in actuators:
         actuator_df[actuator] = [val[1] for val in actuators[actuator]]
-    
+
     return sensor_df, actuator_df
 
 def indexes_from_ms(time_ms: int, cur_ind: int,  time: list) -> (tuple):

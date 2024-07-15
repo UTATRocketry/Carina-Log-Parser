@@ -21,46 +21,45 @@ def textbox_caller(func, text_box: CTkEntry, save: IntVar):
 
 def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry, save: IntVar):
     def call_func2():
-        try:
-            start = start_box.get()
-            end = end_box.get()
-            if start == "" and end == "":
-                func()
-            elif start == "":
-                func(end=float(end))
-            elif end == "":
-                func(start=float(start))
-            else:
-                start = float(start)
-                end = float(end)
-                if start > end:
-                    gui_error("End time cannot be less then Start time")
-                    append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
-                    return
-                func(start, end, save.get())
-        except Exception:
-            gui_error("Invalid Start or End Time")
-    return call_func2
-
-def custom_plot_caller(func, start_box: CTkEntry, end_box: CTkEntry, options: list, save: IntVar): 
-    def call_func2():
         #try:
         start = start_box.get()
         end = end_box.get()
         if start == "" and end == "":
-            func(options)
+            func()
         elif start == "":
-            func(options, end=float(end))
+            func(end=float(end))
         elif end == "":
-            func(options, start=float(start))
+            func(start=float(start))
         else:
             start = float(start)
             end = float(end)
             if start > end:
+                gui_error("End time cannot be less then Start time")
+                append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
+                return
+            func(start, end, save.get())
+        #except Exception:
+            #gui_error("Invalid Start or End Time")
+    return call_func2
+
+def custom_plot_caller(func, times:tuple[CTkEntry, CTkEntry], options:tuple, save: IntVar): 
+    def call_func2():
+        #try:
+        choices = (options[0].selections(), options[1].selections(), options[2].selections())
+        start = times[0].get()
+        end = times[1].get()
+        if start == "" and end == "":
+            func(choices)
+        elif start == "":
+            func(choices, end=float(end), save=save.get())
+        elif end == "":
+            func(choices, start=float(start), save=save.get())
+        else:
+            if start > end:
                 gui_error("End cannot be less then Start")
                 append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
                 return
-            func(options, start, end, save.get())
+            func(choices, float(start), float(end), save.get())
         #except Exception:
             #gui_error("Invalid Start or End value")
     return call_func2
@@ -79,39 +78,66 @@ def clear_gui(window: CTk) -> None:
         window.children[child].destroy() 
     append_to_log("Clearing GUI Screen", "INFO") 
 
-def single_plot(folder_name: str, axis: list, start = 0, end = None, save:int = 0) -> None: # this isnt wokring with actuatos and sensors on same graph so fix actustor length
+def single_plot(folder_name: str, time:list, left_axis: list, right_axis:list, actuators:list, save:int = 0) -> None: 
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
         os.mkdir(os.path.join(os.getcwd(), "Data", folder_name, "Plots"))
 
     colors = ['b','g','r','c','m','y','k']
     name = ""
-    for tup in axis[1:]:
-        name += tup[0] + "&"
+    for tup in left_axis: #fix
+        name += tup[0] + " &"
+    for tup in right_axis:
+        name += tup[0] + " &"
+    for tup in actuators:
+        name += tup[0] + " &"
+    name += " Vs Time"
 
-    start_ind = get_xaxis_index(axis[0][1], start)
-    end_ind = get_xaxis_index(axis[0][1], end)
-    xaxis = axis[0][1][start_ind:end_ind]
-    fig, ax1 = plt.subplots()
-    unit = [get_units(axis[1][0])]
-    ax1.plot(xaxis, axis[1][1][start_ind:end_ind], label=axis[1][0], color=colors[0])
-    ax1.set_ylabel(axis[1][0] + "(" + unit[0] + ")")
-    ax1.set_title(f"{name} vs {axis[0][0]} Plot")
-    ax1.set_xlabel(axis[0][0] + "(" + get_units(axis[0][0]) + ")")
-    i= 1
-    for tup in axis[2:]:
-            ax = ax1.twinx()
-            ax.plot(xaxis, tup[1][start_ind:end_ind], label=tup[0], color = colors[i])
-            if get_units(tup[0]) not in unit:
-                ax.set_ylabel(tup[0] + "(" + get_units(tup[0]) + ")") 
-                unit.append(get_units(tup[0]))
+    fig = plt.figure(name)
+    i = 0
+    plotted = True
+    if left_axis and right_axis:
+        for sensor in left_axis:
+            plt.plot(time, sensor[1], label=sensor[0], color=colors[i])
             i += 1
+        plt.ylabel(get_units(sensor[0]))
+        ax2 = plt.twinx()
+        for sensor in right_axis:
+            ax2.plot(time, sensor[1], label=sensor[0], color=colors[i])
+            i += 1
+        ax2.set_ylabel(get_units(sensor[0]))
+    elif left_axis:
+        for sensor in left_axis:
+            plt.plot(time, sensor[1], label=sensor[0], color=colors[i])
+            i += 1
+        plt.ylabel(get_units(sensor))
+    elif right_axis: 
+        for sensor in right_axis:
+            plt.plot(time, sensor[1], label=sensor[0], color=colors[i])
+            i += 1
+        plt.ylabel(get_units(sensor))
+    else:
+        plotted = False
+    
+    i = 0
+    if actuators and plotted:
+        for actuator in actuators:
+            actuations = get_actuation_indexes(actuator[1])
+            for actuation in actuations:
+                new_xaxis = [time[actuation[0]]]*2
+                plt.plot(new_xaxis, [min(sensor[1]), max(sensor[1])], label=f'{actuator[0]} {actuation[1]}', color=colors[-1], linestyle='-.')
+    elif actuators:
+        for actuator in actuators:
+            plt.plot(time, actuator[1], color=colors[i], label=actuator[0])
+            i += 1
+        plt.ylabel("On/Off (1 or 0)")
 
-    fig.legend()
-    fig.tight_layout()
+    plt.xlabel("Time (s)")
+    plt.title(name)
+    plt.legend()
     fig.show()
 
     if save == 1:
-        fig.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{name} vs {axis[0][0]} Plot {t.strftime('%Hh%Mm%Ss', t.gmtime(start))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end))}.jpg"))
+        fig.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{name} vs Time Plot {t.strftime('%Hh%Mm%Ss', t.gmtime(time[0]))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(time[-1]))}.jpg"))
 
 def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "sensor", start_time = 0, end_time = None, save:int = 0) -> None:
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
@@ -134,7 +160,7 @@ def generate_plots(folder_name: str, dataframe: pd.DataFrame, type: str = "senso
                 plt.stairs(data, time)
             plt.title(column + " vs Time Plot")
             plt.xlabel("Time (s)")
-            plt.ylabel(column + "(" + get_units(column) + ")")
+            plt.ylabel(column + get_units(column))
             p.show() 
             if save == 1:
                 p.savefig(os.path.join(os.getcwd(), "Data", folder_name, "Plots", f"{column} vs Time Plot T[{t.strftime('%Hh%Mm%Ss', t.gmtime(start_time))};T{t.strftime('%Hh%Mm%Ss', t.gmtime(end_time))}].jpg"))
@@ -154,12 +180,22 @@ def get_units(name: str)->str:
     if unit == "B" or unit == "S" or unit == "E" or "V" in name:
         return "On/Off"
     elif unit == "P":
-        return "psi"
+        return "Pressure (psi)"
+    elif name == "MFR":
+        return "Mass Flow Rate (kg/s)"
     elif unit == "M":
-        return "kg"
+        return "Mass (kg)"
     elif unit == "T":
-        return "s"
-
+        return "(s)"
+    
+def get_actuation_indexes(values: list) -> list:
+    res = []
+    for i in range(len(values) - 1):
+        if values[i] > values[i+1]:
+            res.append((i, "Off"))
+        elif values[i] < values[i+1]:
+            res.append((i, "On"))
+    return res
             
 def append_to_log(msg: str, mode: str = 'info') -> None:
     try:

@@ -1,15 +1,15 @@
-[T 10/07/2024 00:31:28], INFO: Program Started
-[T 10/07/2024 00:31:28], INFO: Clearing GUI Screen
-[T 10/07/2024 00:31:39], INFO: Begining data parsing in C:\Users\Brody Howard\Documents\GitHub\Carina-Log-Parser\Data\CF-O3\raw
-[T 10/07/2024 00:31:39], INFO: Clearing GUI Screen
-[T 10/07/2024 00:31:39], INFO: Initalizing Parser
-[T 10/07/2024 00:31:39], INFO: Reading data.log
-[T 10/07/2024 00:31:41], INFO: Reading events.log
-[T 10/07/2024 00:31:41], INFO: Parsing Sensor Lines
-[T 10/07/2024 00:31:48], INFO: Calculating Mass Flow Rate
-[T 10/07/2024 00:32:23], INFO: Parsing Actuator Lines
-[T 10/07/2024 00:32:25], INFO: Reformating Actuators Data and Converting to Dataframes
-[T 10/07/2024 00:32:25], INFO: Creating Graphs
-[T 10/07/2024 00:32:28], INFO: Generated 15 Plots
-[T 10/07/2024 00:32:29], INFO: Data Parsing and Plotting Complete
-[T 10/07/2024 00:32:29], INFO: Clearing GUI Screen
+[T 15/07/2024 01:54:15], INFO: Program Started
+[T 15/07/2024 01:54:15], INFO: Clearing GUI Screen
+[T 15/07/2024 01:54:21], INFO: Begining data parsing in C:\Users\Brody Howard\Documents\GitHub\Carina-Log-Parser\Data\CF-O3\raw
+[T 15/07/2024 01:54:21], INFO: Clearing GUI Screen
+[T 15/07/2024 01:54:21], INFO: Initalizing Parser
+[T 15/07/2024 01:54:21], INFO: Reading data.log
+[T 15/07/2024 01:54:23], INFO: Reading events.log
+[T 15/07/2024 01:54:23], INFO: Parsing Sensor Lines
+[T 15/07/2024 01:54:34], INFO: Parsing Actuator Lines
+[T 15/07/2024 01:54:34], INFO: Reformating Actuators Data and Converting to Dataframes
+[T 15/07/2024 01:54:39], INFO: Creating Graphs
+[T 15/07/2024 01:54:46], INFO: Generated 14 Plots
+[T 15/07/2024 01:54:47], INFO: Data Parsing and Plotting Complete
+[T 15/07/2024 01:54:47], INFO: Clearing GUI Screen
+[T 15/07/2024 01:55:49], INFO:: Created a new custom plot
