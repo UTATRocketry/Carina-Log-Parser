@@ -1,6 +1,5 @@
 
 import os
-import numpy as np
 import multiprocessing
 import pandas as pd
 from queue import Queue
@@ -127,7 +126,7 @@ def mass_flow_rate(sensors: pd.DataFrame, start_ind: int, end_ind: int) -> None:
 
     mass_flow = []
     for i in range(len(mass)):
-        inds = indexes_from_ms(900, i, time) #100 - ok # 500 good # add multiprocessing
+        inds = indexes_from_ms(950, i, time) # maybe add multiprocessing
         res = (mass[inds[1]] - mass[inds[0]]) / (time[inds[1]] - time[inds[0]])
         mass_flow.append(res)
 

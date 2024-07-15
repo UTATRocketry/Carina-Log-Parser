@@ -6,7 +6,6 @@ from src.carina_parser import parser
 from src.GUItools import tools
 from src.GUItools.guiClasses import OptionsColumn, ActuatorTimeDropdown
 
-
 class Carina_Plotter(CTk):
     def __init__(self, Title: str) -> None:
         super().__init__()
@@ -98,7 +97,7 @@ class Carina_Plotter(CTk):
         start = tools.get_xaxis_index(time, start)
         end = tools.get_xaxis_index(time, end)
         left_axis = []
-        for sensor in options[0]: # do this for rest, also MFR won't work for this as cuts length but then tries to cut later in next
+        for sensor in options[0]: 
             if sensor == "MFR":
                 mass_flow = parser.mass_flow_rate(self.sensor_df, start, end)
                 left_axis.append(("MFR", mass_flow))
@@ -156,7 +155,6 @@ class Carina_Plotter(CTk):
         replot_btn = CTkButton(master=replot_frm, text="Replot", width=140, font=("Arial", 18), anchor="center", command=tools.replot_caller(self.plot_all, start_time_ent, end_time_ent, save))
         replot_btn.grid(row=5, column=0, columnspan=2, pady=20, padx=10)
         replot_frm.grid(row=1, column=0, padx=(10, 5), pady=(5, 10), rowspan=3, sticky="nsew")
-        print("here8")
         custom_plot_frm = CTkFrame(master=self)
         custom_plot_frm.grid_columnconfigure((0, 1, 2, 3), weight=1)
         custom_plot_frm.grid_rowconfigure((0, 1, 2, 3, 4, 5), weight=1)
@@ -170,9 +168,7 @@ class Carina_Plotter(CTk):
         end_lbl.grid(row=2, column=2, pady=10, padx=(10, 0), sticky="ew")
         end_ent = CTkEntry(master=custom_plot_frm, font=("Arial", 16), width=60)
         end_ent.grid(row=2, column=3, pady=10, padx=(0, 10), sticky="ew")
-        print("i think here")
         actuator_frame = ActuatorTimeDropdown(master=custom_plot_frm, actuator_df=self.actuator_df, entry_boxes=[start_ent, end_ent], text="Actuator Timelines: ")
-        print("here?")
         actuator_frame.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky="nsew")
         choices_frm = CTkFrame(master=custom_plot_frm)
         choices_frm.grid_rowconfigure((0, 1), weight=1)

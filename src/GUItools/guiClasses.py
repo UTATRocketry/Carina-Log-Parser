@@ -63,14 +63,16 @@ class OptionsColumn(CTkFrame):
         res = ["None"]
         already_chosen = [name.get() for name in self.option_boxes]
         if self.type == "S":
-            already_chosen = [name.get() for name in self.option_boxes]
-            if already_chosen[0][0] != "None":
-                if "M" == already_chosen[0][0]:
+            if already_chosen[0] != "None":
+                if "MFR" == already_chosen[0][0]:
+                    letter = "F"
+                elif "M" == already_chosen[0][0]:
                     letter = "M"
                 elif "P" == already_chosen[0][0]:
                     letter = "P"
                 for name in self.values:
-                    if letter == name[0] and name not in already_chosen: res.append(name)
+                    if letter == name[0] and name != "MFR" and name not in already_chosen: 
+                        res.append(name)
             else:
                 res += self.values 
         else:
@@ -107,30 +109,35 @@ class ActuatorTimeDropdown(CTkFrame):
         self.grid_columnconfigure((0, 1, 2), weight = 1)
         self.grid_rowconfigure((0), weight = 1)
 
-        #self.get_actuator_times()
+        self.get_actuator_times()
 
         self.label = CTkLabel(self, text=self.text, font=self.font)
         self.actuator_opt = CTkOptionMenu(self, font=self.font, values=self.actuators, anchor="center", command=self.set_time_options)
-        self.time_opt = CTkOptionMenu(self, font=self.font, values=[""], anchor="center", command=self.set_entry_boxes)
+        self.time_opt = CTkOptionMenu(self, font=self.font, values=self.actuation_times[self.actuator_opt.get()], anchor="center", command=self.set_entry_boxes)
         self.label.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         self.actuator_opt.grid(row=0, column=1, padx=(5, 5), pady=10, sticky="ew")
-        self.time_opt.grid(row=0, column=2, padx=(5, 5), pady=10, sticky="ew")
+        self.time_opt.grid(row=0, column=2, padx=(5, 5), pady=10, sticky="ew")   
+    
+    def get_actuator_times(self, *args) -> None:
+        self.actuation_times = {}
+        for column in self.df.columns[1:]:
+            changes = self.df[column].diff().fillna(0)
+            switch_on = self.df['Time'][changes == 1].tolist()
+            switch_off = self.df['Time'][changes == -1].tolist()
 
-    def get_actuator_times(self, choice: str)->list:
-        res = []
-        for i in range(len(self.df[choice]) - 1):
-            if self.df[choice][i] > self.df[choice][i+1]:
-                res.append(f'{self.df["Time"][i] + 1}s On -> Off')
-            elif self.df[choice][i] < self.df[choice][i+1]:
-                res.append(f'{self.df["Time"][i] - 1}s Off -> On')
-        if len(res) == 0:
-            res = [""]
-        return res
+            res = []
+            for i in range(len(switch_on)):
+                res.append(f'{switch_on[i] - 5}s Off -> On')
+                res.append(f'{switch_off[i] + 5}s On -> Off')
+
+            if res:
+                self.actuation_times[column] = res
+            else:
+                self.actuation_times[column] = [""]
 
     def set_time_options(self, choice:str)->None:
         self.time_opt.set("")
-        self.actuation_times = self.get_actuator_times(choice)
-        self.time_opt.configure(values=self.actuation_times)
+        self.time_opt.configure(values=self.actuation_times[choice])
 
     def set_entry_boxes(self, choice:str)->None:
         if choice != "":
@@ -138,11 +145,11 @@ class ActuatorTimeDropdown(CTkFrame):
             self.entry_boxes[0].delete(0, tk.END)
             self.entry_boxes[0].insert(0, choice.split("s ")[0])
             self.entry_boxes[1].delete(0, tk.END)
-            for i in range(len(self.actuation_times)):
-                if self.actuation_times[i].split("s ")[0] == choice:
+            for i in range(len(self.actuation_times[self.actuator_opt.get()])):
+                if self.actuation_times[self.actuator_opt.get()][i].split("s ")[0] == choice:
                     break
-            if i + 1 < len(self.actuation_times):
-                self.entry_boxes[1].insert(0, self.actuation_times[i + 1].split("s ")[0])
+            if i + 1 < len(self.actuation_times[self.actuator_opt.get()]):
+                self.entry_boxes[1].insert(0, self.actuation_times[self.actuator_opt.get()][i + 1].split("s ")[0])
             
 
 class OptionsBar(CTkFrame):

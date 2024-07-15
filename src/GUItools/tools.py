@@ -21,47 +21,47 @@ def textbox_caller(func, text_box: CTkEntry, save: IntVar):
 
 def replot_caller(func, start_box: CTkEntry, end_box: CTkEntry, save: IntVar):
     def call_func2():
-        #try:
-        start = start_box.get()
-        end = end_box.get()
-        if start == "" and end == "":
-            func()
-        elif start == "":
-            func(end=float(end))
-        elif end == "":
-            func(start=float(start))
-        else:
-            start = float(start)
-            end = float(end)
-            if start > end:
-                gui_error("End time cannot be less then Start time")
-                append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
-                return
-            func(start, end, save.get())
-        #except Exception:
-            #gui_error("Invalid Start or End Time")
+        try:
+            start = start_box.get()
+            end = end_box.get()
+            if start == "" and end == "":
+                func()
+            elif start == "":
+                func(end=float(end))
+            elif end == "":
+                func(start=float(start))
+            else:
+                start = float(start)
+                end = float(end)
+                if start > end:
+                    gui_error("End time cannot be less then Start time")
+                    append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
+                    return
+                func(start, end, save.get())
+        except Exception:
+            gui_error("Invalid Start or End Time")
     return call_func2
 
 def custom_plot_caller(func, times:tuple[CTkEntry, CTkEntry], options:tuple, save: IntVar): 
     def call_func2():
-        #try:
-        choices = (options[0].selections(), options[1].selections(), options[2].selections())
-        start = times[0].get()
-        end = times[1].get()
-        if start == "" and end == "":
-            func(choices)
-        elif start == "":
-            func(choices, end=float(end), save=save.get())
-        elif end == "":
-            func(choices, start=float(start), save=save.get())
-        else:
-            if start > end:
-                gui_error("End cannot be less then Start")
-                append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
-                return
-            func(choices, float(start), float(end), save.get())
-        #except Exception:
-            #gui_error("Invalid Start or End value")
+        try:
+            choices = (options[0].selections(), options[1].selections(), options[2].selections())
+            start = times[0].get()
+            end = times[1].get()
+            if start == "" and end == "":
+                func(choices)
+            elif start == "":
+                func(choices, end=float(end), save=save.get())
+            elif end == "":
+                func(choices, start=float(start), save=save.get())
+            else:
+                if start > end:
+                    gui_error("End cannot be less then Start")
+                    append_to_log(f"Failed to create graphs as start time was greater then end time (start:{start}, end:{end})", "ERROR")
+                    return
+                func(choices, float(start), float(end), save.get())
+        except Exception:
+            gui_error("Invalid Start or End value")
     return call_func2
 
 def add_caller(func, button: CTkButton):
@@ -78,6 +78,7 @@ def clear_gui(window: CTk) -> None:
         window.children[child].destroy() 
     append_to_log("Clearing GUI Screen", "INFO") 
 
+#add error handeling for colors array, in general improve color handeling fr lines
 def single_plot(folder_name: str, time:list, left_axis: list, right_axis:list, actuators:list, save:int = 0) -> None: 
     if not os.path.exists(os.path.join(os.getcwd(), "Data", folder_name, "Plots")):
         os.mkdir(os.path.join(os.getcwd(), "Data", folder_name, "Plots"))
@@ -85,12 +86,12 @@ def single_plot(folder_name: str, time:list, left_axis: list, right_axis:list, a
     colors = ['b','g','r','c','m','y','k']
     name = ""
     for tup in left_axis: #fix
-        name += tup[0] + " &"
+        name += tup[0] + " & "
     for tup in right_axis:
-        name += tup[0] + " &"
+        name += tup[0] + " & "
     for tup in actuators:
-        name += tup[0] + " &"
-    name += " Vs Time"
+        name += tup[0] + " & "
+    name += "Vs Time"
 
     fig = plt.figure(name)
     i = 0
@@ -109,22 +110,23 @@ def single_plot(folder_name: str, time:list, left_axis: list, right_axis:list, a
         for sensor in left_axis:
             plt.plot(time, sensor[1], label=sensor[0], color=colors[i])
             i += 1
-        plt.ylabel(get_units(sensor))
+        plt.ylabel(get_units(sensor[0]))
     elif right_axis: 
         for sensor in right_axis:
             plt.plot(time, sensor[1], label=sensor[0], color=colors[i])
             i += 1
-        plt.ylabel(get_units(sensor))
+        plt.ylabel(get_units(sensor[0]))
     else:
         plotted = False
     
-    i = 0
+    i = len(colors) - 1
     if actuators and plotted:
         for actuator in actuators:
             actuations = get_actuation_indexes(actuator[1])
             for actuation in actuations:
                 new_xaxis = [time[actuation[0]]]*2
-                plt.plot(new_xaxis, [min(sensor[1]), max(sensor[1])], label=f'{actuator[0]} {actuation[1]}', color=colors[-1], linestyle='-.')
+                plt.plot(new_xaxis, [min(sensor[1]), max(sensor[1])], label=f'{actuator[0]} {actuation[1]}', color=colors[i], linestyle='-.')
+                i -= 1
     elif actuators:
         for actuator in actuators:
             plt.plot(time, actuator[1], color=colors[i], label=actuator[0])
@@ -133,7 +135,7 @@ def single_plot(folder_name: str, time:list, left_axis: list, right_axis:list, a
 
     plt.xlabel("Time (s)")
     plt.title(name)
-    plt.legend()
+    fig.legend()
     fig.show()
 
     if save == 1:
